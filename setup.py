@@ -326,7 +326,6 @@ if "--cuda_ext" in sys.argv:
             )
         )
 
-
 #**********  syncbn  ****************
     print("INFO: Building syncbn extension.")
     ext_modules.append(
@@ -364,37 +363,13 @@ if "--cuda_ext" in sys.argv:
             )
         )
 
-<<<<<<< HEAD
+#**********  fused dense  ****************
         ext_modules.append(
             CUDAExtension(name='fused_dense_cuda',
                           sources=['csrc/fused_dense_base.cpp',
                                    'csrc/fused_dense_cuda.cu'],
                           extra_compile_args={'cxx': ['-O3'] + version_dependent_macros,
                                               'nvcc':['-O3'] + version_dependent_macros}))
-        nvcc_args_transformer = ['-O3',
-                                 '-U__CUDA_NO_HALF_OPERATORS__',
-                                 '-U__CUDA_NO_HALF_CONVERSIONS__',
-                                 '--expt-relaxed-constexpr',
-                                 '--expt-extended-lambda'] + version_dependent_macros
-        hipcc_args_transformer = ['-g',
-                                 '-U__CUDA_NO_HALF_OPERATORS__',
-                                 '-U__CUDA_NO_HALF_CONVERSIONS__'] + version_dependent_macros
-        ext_modules.append(
-            CUDAExtension(name='scaled_upper_triang_masked_softmax_cuda',
-                          sources=['csrc/megatron/scaled_upper_triang_masked_softmax.cpp',
-                                   'csrc/megatron/scaled_upper_triang_masked_softmax_cuda.cu'],
-                          include_dirs=[os.path.join(this_dir, 'csrc')],
-                          extra_compile_args={'cxx': ['-O3'] + version_dependent_macros,
-                                              'nvcc':nvcc_args_transformer if not IS_ROCM_PYTORCH else hipcc_args_transformer}))
-        ext_modules.append(
-            CUDAExtension(name='scaled_masked_softmax_cuda',
-                          sources=['csrc/megatron/scaled_masked_softmax.cpp',
-                                   'csrc/megatron/scaled_masked_softmax_cuda.cu'],
-                          include_dirs=[os.path.join(this_dir, 'csrc'),
-                                        os.path.join(this_dir, 'csrc/megatron')],
-                          extra_compile_args={'cxx': ['-O3'] + version_dependent_macros,
-                                              'nvcc':nvcc_args_transformer if not IS_ROCM_PYTORCH else hipcc_args_transformer}))
-=======
 #**********  mlp_cuda  ****************
     hipcc_args_mlp = ['-O3'] + version_dependent_macros
     if found_Backward_Pass_Guard:
@@ -418,21 +393,7 @@ if "--cuda_ext" in sys.argv:
             )
         )
 
-#**********  fused_dense_cuda  ****************
-    ext_modules.append(
-        CUDAExtension(
-            name='fused_dense_cuda',
-            sources=[
-                'csrc/fused_dense.cpp',
-                'csrc/fused_dense_cuda.cu',
-            ],
-            extra_compile_args={
-                'cxx': ['-O3'] + version_dependent_macros,
-                'nvcc':['-O3'] + version_dependent_macros,
-                }
-            )
-        )
-
+#**********  scaled_upper_triang_masked_softmax_cuda  ****************
     nvcc_args_transformer = ['-O3',
                              '-U__CUDA_NO_HALF_OPERATORS__',
                              '-U__CUDA_NO_HALF_CONVERSIONS__',
@@ -442,7 +403,6 @@ if "--cuda_ext" in sys.argv:
                               '-U__CUDA_NO_HALF_OPERATORS__',
                               '-U__CUDA_NO_HALF_CONVERSIONS__'] + version_dependent_macros
 
-#**********  scaled_upper_triang_masked_softmax_cuda  ****************
     ext_modules.append(
         CUDAExtension(
             name='scaled_upper_triang_masked_softmax_cuda',
@@ -506,7 +466,6 @@ if "--cuda_ext" in sys.argv:
                 }
             )
         )
->>>>>>> master
 
 
 if "--bnp" in sys.argv or "--cuda_ext" in sys.argv:
