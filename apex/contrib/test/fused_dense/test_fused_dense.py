@@ -17,8 +17,6 @@ class FusedDenseTest(unittest.TestCase):
         self.ref_inputs = torch.randn(self.sequences*self.seq_length, self.hidden_dim,
                                       dtype=torch.float16, device=torch.device("cuda")).int().half().requires_grad_(True)
 
-
-        print(self.ref_inputs)
         self.tst_inputs = self.ref_inputs.clone().detach().requires_grad_(True)
         self.dense = fused_dense.FusedDense(1024, 3072)
         self.dense.half()
@@ -33,10 +31,6 @@ class FusedDenseTest(unittest.TestCase):
         dw_ref = torch.matmul(dy.t(), self.ref_inputs)
         dx_ref = torch.matmul(dy, self.dense.weight.clone())
         db_ref = dy.sum(0, False)
-       
-        print(self.tst_inputs)
-        print(y_tst)
-        print(y_ref)
 
         self.assertTrue(torch.allclose(self.ref_inputs,  self.tst_inputs,        atol=1e-5, rtol=1e-5))
         self.assertTrue(torch.allclose(y_ref,            y_tst,                  atol=1e-3, rtol=1e-3, equal_nan=True))
