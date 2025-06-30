@@ -62,10 +62,10 @@ def main(args):
     errcode = 0
     for test_dir in args.include:
         test_dir = os.path.join(TEST_ROOT, test_dir)
-        print(test_dir)
+        print(test_dir, flush=True)
         suite = unittest.TestLoader().discover(test_dir)
 
-        print("\nExecuting tests from " + test_dir)
+        print("\nExecuting tests from " + test_dir, flush=True)
         result = runner.run(suite)
         if not result.wasSuccessful():
             errcode = 1
