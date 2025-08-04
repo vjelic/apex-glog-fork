@@ -27,6 +27,9 @@
 // width should be a power of 2 and should be less than warpSize.
 template <typename scalar_t>
 __device__ __forceinline__ scalar_t warpReduce(scalar_t x, int width=C10_WARP_SIZE){
+        int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
     for (unsigned offset = width/2; offset > 0; offset /= 2){
         x += SHFL_DOWN(x, offset, width);
     }
@@ -396,6 +399,9 @@ __device__ void transducer_joint_single_backward(
     // For the second input tensor, this offset need to be subtracted because the first yBlockOffset
     // sets of thread blocks are for the first input tensor.
     const int x = blockIdx.y-yBlockOffset;
+        int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
     const int hOffset = blockIdx.x*C10_WARP_SIZE;
     const int wid = threadIdx.y;
     const int lid = threadIdx.x;
@@ -537,6 +543,9 @@ __device__ void transducer_joint_single_vec_backward(
 
     const int batch = blockIdx.z;
     const int x = blockIdx.y - yBlockOffset;
+        int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
     const int hOffset = blockIdx.x*C10_WARP_SIZE*V;
     const int wid = threadIdx.y;
     const int lid = threadIdx.x;
@@ -601,6 +610,7 @@ __device__ void transducer_joint_single_vec_backward(
         for (int i = 0; i < V; ++i){
             smem[lid*numWarp + wid] = warpSum[i];
             __syncthreads();
+
             auto sum = smem[wid*C10_WARP_SIZE + lid];
 
             if (hOffset+(wid*C10_WARP_SIZE/numWarp)*V < hiddenSize){
@@ -618,6 +628,7 @@ __device__ void transducer_joint_single_vec_backward(
         // a a b b c c d d
         // example of 4 warps (a, b, c, d) with 8 threads per warp
         // Each warp need 8 / 4 = 2 threads to write the results.
+
         if (lid % numWarp == 0 and hOffset+(wid*C10_WARP_SIZE/numWarp + lid/numWarp)*V < hiddenSize)
             myInGradVec[wid*C10_WARP_SIZE/numWarp + lid/numWarp] = *outBufferVec;     
     }
@@ -729,6 +740,8 @@ std::vector<torch::Tensor> transducer_joint_cuda_forward(
 
     TORCH_CHECK(opt == 0 or opt == 1, "Got an invalid optimization level ", opt);
     // Simple heuristics
+        int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
     const int numThread = std::min(128, (static_cast<int>(hiddenSize)+at::cuda::warp_size()-1)
                                         / at::cuda::warp_size() * at::cuda::warp_size());
     
@@ -862,6 +875,8 @@ std::vector<torch::Tensor> transducer_joint_cuda_backward(
     const int hiddenSize = grad.size(-1);
 
     const auto deviceProperties = at::cuda::getCurrentDeviceProperties();
+        int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
     const int maxNumWarp = deviceProperties->maxThreadsPerBlock / at::cuda::warp_size();
 
     torch::Tensor fGrad = torch::empty({batchSize, maxFLen, hiddenSize}, tensorOpt);
@@ -880,6 +895,7 @@ std::vector<torch::Tensor> transducer_joint_cuda_backward(
 
     // Need smem for transposing the partial sum. The partial sum is in a matrix of the shape
     // numWarp x warpSize
+
     const int smemSize = numWarp * at::cuda::warp_size();
     const dim3 threads(at::cuda::warp_size(), numWarp, 1);
 
@@ -905,6 +921,7 @@ std::vector<torch::Tensor> transducer_joint_cuda_backward(
         if (vectFactor > 1 and hiddenSize%vectFactor == 0 and memAlign){
             // If vectorization helps and the alignment requirement is met, use the vectorized 
             // kernel. For simplicity, hiddenSize needs to be a multiple vecFactor.
+
             const dim3 blocks(  (hiddenSize+at::cuda::warp_size()*vectFactor-1)/(at::cuda::warp_size()*vectFactor),
                                 maxFLen+maxGLen, 
                                 batchSize);

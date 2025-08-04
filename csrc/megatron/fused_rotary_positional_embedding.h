@@ -335,6 +335,8 @@ void dispatch_fused_rope_forward(const int s, const int b, const int h,
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(s, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_forward<<<blocks, threads, 0, stream>>>(
@@ -356,6 +358,8 @@ void dispatch_fused_rope_backward(const int s, const int b, const int h,
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(s, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_backward<<<blocks, threads, 0, stream>>>(
@@ -375,6 +379,8 @@ void dispatch_fused_rope_cached_forward(
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(s, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_cached_forward<<<blocks, threads, 0, stream>>>(
@@ -394,6 +400,8 @@ void dispatch_fused_rope_cached_backward(
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(s, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_cached_backward<<<blocks, threads, 0, stream>>>(
@@ -415,6 +423,8 @@ void dispatch_fused_rope_thd_forward(const int max_s, const int b, const int h,
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(max_s, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_thd_forward<<<blocks, threads, 0, stream>>>(
@@ -434,6 +444,8 @@ void dispatch_fused_rope_thd_backward(
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(max_s, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_thd_backward<<<blocks, threads, 0, stream>>>(
@@ -454,6 +466,8 @@ void dispatch_fused_rope_2d_forward(
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(ih, iw, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_2d_forward<<<blocks, threads, 0, stream>>>(
@@ -476,6 +490,8 @@ void dispatch_fused_rope_2d_backward(
 
   int warps_per_block = h < 16 ? 4 : 8;
   dim3 blocks(ih, iw, b);
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   dim3 threads(at::cuda::warp_size(), warps_per_block);
 
   fused_rope_2d_backward<<<blocks, threads, 0, stream>>>(

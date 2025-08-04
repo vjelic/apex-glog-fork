@@ -546,6 +546,9 @@ DEVICE_FUNCTION void parallel_sums_16x2(float *smem, float (&x)[4], int nhw,
                                         void* params_my_data, void** params_pair_datas, int off,
                                         const int magic,
                                         const int sync_iters) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);                                             
     // The number of warps in a CTA.
     const int WARPS_PER_CTA = THREADS_PER_CTA / C10_WARP_SIZE;
     // The number of threads per pixel.
@@ -675,6 +678,9 @@ DEVICE_FUNCTION void parallel_sums_16x2(float *smem, float (&x)[4], int nhw,
 
 template< int THREADS_PER_CTA >
 DEVICE_FUNCTION void parallel_sums_8x4(float *smem, float (&x)[4], int nhw) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);    
     // The number of warps in a CTA.
     const int WARPS_PER_CTA = THREADS_PER_CTA / C10_WARP_SIZE;
     // The number of threads per pixel.
@@ -733,6 +739,9 @@ DEVICE_FUNCTION void parallel_sums_8x4(float *smem, float (&x)[4], int nhw) {
 
 template< int THREADS_PER_CTA, int THREADS_PER_PIXEL, int ELEMENTS_PER_LDG >
 DEVICE_FUNCTION void parallel_sums(float *smem, float (&x)[ELEMENTS_PER_LDG], int nhw) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);    
     const int WARPS_PER_CTA = THREADS_PER_CTA / C10_WARP_SIZE;
     // The warp decomposition.
     const int warp_id = threadIdx.x / C10_WARP_SIZE;
@@ -1034,6 +1043,9 @@ template<
 >
 __global__ __launch_bounds__(THREADS_PER_CTA, DESIRED_OCCUPANCY)
     void nhwc_batch_norm_fwd(NhwcBatchNormFwdParams params) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);            
     // The number of pixels loaded in a single LDG.
     const int PIXELS_PER_LDG = THREADS_PER_CTA / THREADS_PER_PIXEL;
     // The number of pixels computed per CTA stored in registers.
@@ -1761,6 +1773,9 @@ template<
 >
 __global__ __launch_bounds__(THREADS_PER_CTA, DESIRED_OCCUPANCY)
     void nhwc_batch_norm_bwd(NhwcBatchNormBwdParams params) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);            
     // The number of pixels loaded in a single LDG.
     const int PIXELS_PER_LDG = THREADS_PER_CTA / THREADS_PER_PIXEL;
     // The number of pixels computed per CTA stored in registers.
@@ -2149,6 +2164,9 @@ template<
 >
 __global__ __launch_bounds__(THREADS_PER_CTA, DESIRED_OCCUPANCY)
     void nhwc_batch_norm_bwd_relu(NhwcBatchNormBwdParams params) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);            
     // The number of pixels loaded in a single LDG.
     const int PIXELS_PER_LDG = THREADS_PER_CTA / THREADS_PER_PIXEL;
     // The number of pixels computed per CTA stored in registers.
@@ -2561,6 +2579,9 @@ template<
 >
 __global__ __launch_bounds__(THREADS_PER_CTA, DESIRED_OCCUPANCY)
     void nhwc_batch_norm_bwd_add_relu(NhwcBatchNormBwdParams params) {
+    int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);    
     // The number of pixels loaded in a single LDG.
     const int PIXELS_PER_LDG = THREADS_PER_CTA / THREADS_PER_PIXEL;
     // The number of pixels computed per CTA stored in registers.

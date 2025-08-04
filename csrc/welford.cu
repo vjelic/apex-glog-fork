@@ -48,7 +48,12 @@ __host__ __forceinline__ int h_last_pow2(unsigned int n) {
 template<typename T>
 __device__ __forceinline__ T warp_reduce_sum(T val)
 {
+        int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   #pragma unroll
+  
+
   for(int i = C10_WARP_SIZE/2; i > 0; i >>= 1)
     val = val + SHFL_DOWN(0xffffffff, val, i);
   return val;
@@ -57,6 +62,9 @@ __device__ __forceinline__ T warp_reduce_sum(T val)
 template<typename T>
 __device__ __forceinline__ T reduce_block(T *x, T val)
 {
+      int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   int tid = threadIdx.y*blockDim.x + threadIdx.x;
   int blockSize = blockDim.x * blockDim.y;
   int lane = tid % C10_WARP_SIZE;
@@ -92,6 +100,8 @@ __host__ void flexible_launch_configs(
       dim3 &block,
       dim3 &grid,
       const bool coop_flag = false) {
+              int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   int block_x = std::min(h_last_pow2(stride), at::cuda::warp_size());
   int block_y = std::min(h_last_pow2(div_ru(reduction , ELEMENTS_PER_THREAD)),
                          MAX_BLOCK_SIZE / block_x);
@@ -131,7 +141,11 @@ __device__ __forceinline__ void welford_merge_element(C& count,
 template<typename T>
 __device__ __forceinline__ void warp_reduce_mean_m2n(T &mean, T &m2n, int &num)
 {
+        int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   #pragma unroll
+
   for(int i = C10_WARP_SIZE/2; i > 0; i >>= 1) {
     auto num_new = SHFL_DOWN(0xffffffff, num, i);
     auto mean_new = SHFL_DOWN(0xffffffff, mean, i);
@@ -150,6 +164,9 @@ __device__ void welford_reduce_mean_m2n(
       int block_size,
       int thread_id)
 {
+      int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   int lane = thread_id % C10_WARP_SIZE;
   int wid = thread_id / C10_WARP_SIZE;
 
@@ -288,7 +305,9 @@ __global__ void welford_kernel(
       m_2_n += d * (x_n - x_mean);
     }
   }
+    int warp_size = C10_WARP_SIZE; 
 
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   static __shared__ int s_mem[C10_WARP_SIZE];
   static __shared__ accscalar_t s_mem_ac[C10_WARP_SIZE*2];
 
@@ -347,6 +366,9 @@ __global__ void reduce_bn_kernel(
       const int bs,
       const int fs,
       const int ss) {
+            int warp_size = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   static __shared__ int s_mem[C10_WARP_SIZE];
   //int total_item_num = bs * ss;
 
@@ -945,7 +967,8 @@ std::vector<at::Tensor> welford_mean_var_CUDA(const at::Tensor input) {
 
   at::Tensor out_var_biased = at::empty({feature_size}, input.options().dtype(scalar_type));
   at::Tensor out_mean = at::empty({feature_size}, input.options().dtype(scalar_type));
-
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   int block_y = min(h_last_pow2(batch_size), int(MAX_BLOCK_SIZE / at::cuda::warp_size()));
   int block_x = max(1, min(MAX_BLOCK_SIZE / block_y, h_last_pow2(space_size)));
   const dim3 block(block_x, block_y);
@@ -981,7 +1004,8 @@ at::Tensor batchnorm_forward_CUDA(
   at::Tensor out = at::empty_like(input);
 
   auto space_size = get_tensor_spatial_size(input);
-
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   int block_x = max(at::cuda::warp_size(), min(MAX_BLOCK_SIZE, h_last_pow2(space_size)/4));
   int block_y = max(1, min(MAX_BLOCK_SIZE/block_x, h_last_pow2(batch_size)/4));
   const dim3 block(block_x, block_y);
@@ -1054,7 +1078,8 @@ std::vector<at::Tensor> reduce_bn_CUDA(
   }
 
   auto space_size = get_tensor_spatial_size(input);
-
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   int block_y = min(h_last_pow2(batch_size), int(MAX_BLOCK_SIZE/ at::cuda::warp_size()));
   int block_x = max(1, min(MAX_BLOCK_SIZE/ block_y, h_last_pow2(space_size)));
   const dim3 block(block_x, block_y);
@@ -1121,7 +1146,8 @@ at::Tensor batchnorm_backward_CUDA(
   at::Tensor grad_input = at::empty_like(input);
 
   auto space_size = get_tensor_spatial_size(input);
-
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   int block_x = max(at::cuda::warp_size(), min(MAX_BLOCK_SIZE, h_last_pow2(space_size)/4));
   int block_y = max(1, min(MAX_BLOCK_SIZE/block_x, h_last_pow2(batch_size)/4));
   const dim3 block(block_x, block_y);

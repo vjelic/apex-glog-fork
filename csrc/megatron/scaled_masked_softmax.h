@@ -104,6 +104,9 @@ __global__ void scaled_softmax_warp_forward(
     int micro_batch_size,
     int element_count)
 {
+    int warp_size2 = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size2);  
     // WARP_SIZE and WARP_BATCH must match the return values batches_per_warp and
     // warp_size of method warp_softmax_forward_kernel.
     constexpr int next_power_of_two = 1 << log2_elements;
@@ -218,6 +221,9 @@ __global__ void scaled_masked_softmax_warp_forward(
     int element_count,
     int pad_batches) 
 {
+        int warp_size2 = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size2);  
     // WARP_SIZE and WARP_BATCH must match the return values batches_per_warp and 
     // warp_size of method warp_softmax_forward_kernel.
     constexpr int next_power_of_two = 1 << log2_elements;
@@ -346,6 +352,9 @@ __global__ void scaled_masked_softmax_warp_backward(
     int micro_batch_size, 
     int element_count)
 {
+        int warp_size2 = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size2);  
     // WARP_SIZE and WARP_BATCH must match the return values batches_per_warp and 
     // warp_size of method warp_softmax_backward_kernel.
     constexpr int next_power_of_two = 1 << log2_elements;
@@ -437,7 +446,8 @@ __global__ void scaled_masked_softmax_warp_backward(
 int get_batch_per_block(int query_seq_len, int key_seq_len, int batches, int attn_heads){
     int log2_elements = log2_ceil(key_seq_len);
     const int next_power_of_two = 1 << log2_elements;
-
+      int warp_size2 = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size2);
     int warp_size = (next_power_of_two < at::cuda::warp_size()) ? next_power_of_two : at::cuda::warp_size();
 
     int batches_per_warp = (next_power_of_two <= 128) ? 2 : 1;
@@ -459,6 +469,8 @@ void dispatch_scaled_softmax_forward(
     int batches,
     int attn_heads)
 {
+          int warp_size2 = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size2);
     TORCH_INTERNAL_ASSERT(key_seq_len >= 0 && key_seq_len <= 16384 );
     if (key_seq_len == 0) {
         return;
@@ -561,6 +573,8 @@ void dispatch_scaled_masked_softmax_forward(
     int attn_heads,
     int pad_batches)
 {
+          int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
     TORCH_INTERNAL_ASSERT(key_seq_len >= 0 && key_seq_len <= 4096 );
     if (key_seq_len == 0) {
         return;
@@ -658,6 +672,8 @@ void dispatch_scaled_masked_softmax_backward(
     if (key_seq_len == 0) {
        return;
     } else {
+              int warp_size2 = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size2);
         int log2_elements = log2_ceil(key_seq_len);
         const int next_power_of_two = 1 << log2_elements;
         int batch_count = batches *  attn_heads * query_seq_len;

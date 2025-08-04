@@ -82,7 +82,9 @@ __global__ void scaled_masked_softmax_warp_backward_new(
     int num_reductions =  (element_count - 1) / threads_per_block + 1;
 
     int offset = blockIdx.x * element_count;
+    int warp_size = C10_WARP_SIZE; 
 
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
     int local_idx = threadIdx.x;
     int lane = threadIdx.x % C10_WARP_SIZE;
     int wid = threadIdx.x / C10_WARP_SIZE;
@@ -98,7 +100,9 @@ __global__ void scaled_masked_softmax_warp_backward_new(
         }
         __syncthreads();
     }
+    int warp_size2 = C10_WARP_SIZE; 
 
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size2);  
     // find the sum 
     for (int i = local_idx; i < (element_count - 1) / C10_WARP_SIZE + 1; i += threads_per_block){
         shared[i] = 0.0;
@@ -114,6 +118,9 @@ __global__ void scaled_masked_softmax_warp_backward_new(
             val = 0.0;
         }
         __syncthreads();
+            int warp_size3 = C10_WARP_SIZE; 
+
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size3);  
         val = warp_reduce_new<acc_t, C10_WARP_SIZE, Add>(val);
         if (lane==0 && wid + warps_per_thread_block * i < (element_count - 1) / C10_WARP_SIZE + 1) {
             shared[wid + warps_per_thread_block*i] = val;
@@ -173,6 +180,8 @@ void dispatch_scaled_masked_softmax_backward_new(
         int batch_count = batches * attn_heads * query_seq_len;
         // use 128 threads per block to maximize gpu utilization
         constexpr int threads_per_block = 128;
+              int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
         int num_warps = (key_seq_len - 1) / at::cuda::warp_size() + 1;
         dim3 blocks(batch_count, 1, 1);
         dim3 threads(threads_per_block, 1, 1);
@@ -218,7 +227,9 @@ __global__ void scaled_masked_softmax_warp_forward_new(
         int mask_batch_id = blockIdx.x / attn_heads / query_len;
         mask_offset = (mask_batch_id * query_len + query_id) * element_count;
     }
+    int warp_size = C10_WARP_SIZE; 
 
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
     int local_idx = threadIdx.x;
     int lane = threadIdx.x % C10_WARP_SIZE;
     int wid = threadIdx.x / C10_WARP_SIZE;
@@ -373,7 +384,8 @@ void dispatch_scaled_masked_softmax_forward_new(
 
         // use 128 threads per block to maximize gpu utilization
         constexpr int threads_per_block = 128;
-
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
         // calculate the needed shared memory
         int num_warps = (key_seq_len - 1) / at::cuda::warp_size() + 1;
 

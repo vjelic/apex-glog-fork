@@ -129,6 +129,8 @@ inline dim3 SoftMax_getBlockSize(int ILP, uint64_t dim_size) {
   uint64_t max_block_size = std::min(dim_size / ILP, static_cast<uint64_t>(max_threads));
   while (block_size < (max_block_size/2)) block_size *= 2;
   // Launch at least a single warp - the kernel assumes that.
+      int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
   block_size = std::max(block_size, static_cast<uint64_t>(at::cuda::warp_size()));
   return dim3(block_size);
 }
@@ -196,7 +198,9 @@ blockReduce(AccumT* smem, AccumT val,
   __syncthreads();
 
   AccumT warpVal = defaultVal;
+    int warp_size = C10_WARP_SIZE; 
 
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   // First warp will perform per-warp reductions for the remaining warps
   uint32_t mask = (((uint64_t)1) << (blockDim.x / C10_WARP_SIZE)) - 1;
   if (threadIdx.x < C10_WARP_SIZE) {
@@ -215,7 +219,6 @@ blockReduce(AccumT* smem, AccumT val,
 
   // First thread will perform a reduction of the above per-warp reductions
   AccumT blockVal = defaultVal;
-
   if (threadIdx.x == 0) {
     for (int i = 0; i < blockDim.x / C10_WARP_SIZE; ++i) {
       blockVal = r(blockVal, smem[i]);
@@ -250,7 +253,9 @@ blockReduce(AccumT* smem,
 
   AccumT warpVal1 = defaultVal1;
   AccumT warpVal2 = defaultVal2;
+    int warp_size = C10_WARP_SIZE; 
 
+    printf("[%s::%s] C10_WARP_SIZE = %d\n", __FILE__, __FUNCTION__, warp_size);  
   // First warp will perform per-warp reductions for the remaining warps
   uint32_t mask = (((uint64_t)1) << (blockDim.x / C10_WARP_SIZE)) - 1;
   if (threadIdx.x < C10_WARP_SIZE) {

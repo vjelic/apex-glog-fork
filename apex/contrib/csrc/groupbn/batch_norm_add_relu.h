@@ -531,6 +531,8 @@ class NhwcBatchNormAddRelu {
   // Calculate the expected fwd kernel occupancy, as dictated by shared memory usage.
   static int smem_driven_fwd_occupancy(int device_id, const int max_cta_per_sm) {
     using namespace at::cuda::utils;
+    int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
     int fwd_reduction_bytes = THREADS_PER_PIXEL*(THREADS_PER_CTA/at::cuda::warp_size())*ELEMENTS_PER_LDG*sizeof(float);
     int fwd_smem_bytes = SMEM_SIZE_FWD + fwd_reduction_bytes;
     int occupancy = MaxSharedMemoryPerMultiprocessor(device_id) / fwd_smem_bytes;
@@ -540,6 +542,8 @@ class NhwcBatchNormAddRelu {
   // Calculate the expected bwd kernel occupancy, as dictated by shared memory usage.
   static int smem_driven_bwd_occupancy(int device_id, const int max_cta_per_sm) {
     using namespace at::cuda::utils;
+    int warp_size = at::cuda::warp_size();
+    printf("[%s::%s] at::cuda::warp_size() = %d\n", __FILE__, __FUNCTION__, warp_size);
     int bwd_reduction_bytes = THREADS_PER_PIXEL*(THREADS_PER_CTA/at::cuda::warp_size())*ELEMENTS_PER_LDG*sizeof(float);
     int bwd_smem_bytes = SMEM_SIZE_BWD + bwd_reduction_bytes;
     int occupancy = MaxSharedMemoryPerMultiprocessor(device_id) / bwd_smem_bytes;
